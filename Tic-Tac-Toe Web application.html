@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tic Tac Toe</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .game {
+      background: #1e293b;
+      padding: 25px;
+      border-radius: 12px;
+      text-align: center;
+      width: 320px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .status {
+      margin-bottom: 15px;
+      font-size: 1.1rem;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .cell {
+      width: 90px;
+      height: 90px;
+      font-size: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #334155;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background 0.3s;
+    }
+
+    .cell:hover {
+      background: #475569;
+    }
+
+    .cell.disabled {
+      cursor: not-allowed;
+      background: #1e293b;
+    }
+
+    button, select {
+      padding: 8px 12px;
+      margin-top: 8px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+
+    button {
+      background: #38bdf8;
+      color: #000;
+    }
+
+    select {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="game">
+    <h1>Tic Tac Toe</h1>
+
+    <select id="mode" onchange="resetGame()">
+      <option value="human">Player vs Player</option>
+      <option value="ai">Player vs AI</option>
+    </select>
+
+    <div class="status" id="status">Player X's turn</div>
+
+    <div class="board" id="board"></div>
+
+    <button onclick="resetGame()">Reset Game</button>
+  </div>
+
+  <script>
+    const board = document.getElementById("board");
+    const statusText = document.getElementById("status");
+    const modeSelect = document.getElementById("mode");
+
+    let currentPlayer = "X";
+    let gameActive = true;
+    let gameState = Array(9).fill("");
+
+    const winConditions = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    function createBoard() {
+      board.innerHTML = "";
+      gameState.forEach((_, index) => {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.dataset.index = index;
+        cell.addEventListener("click", handleCellClick);
+        board.appendChild(cell);
+      });
+    }
+
+    function handleCellClick(e) {
+      const index = e.target.dataset.index;
+
+      if (!gameActive || gameState[index] !== "") return;
+
+      makeMove(index, currentPlayer);
+
+      if (modeSelect.value === "ai" && gameActive && currentPlayer === "O") {
+        setTimeout(aiMove, 400);
+      }
+    }
+
+    function makeMove(index, player) {
+      gameState[index] = player;
+      document.querySelectorAll(".cell")[index].textContent = player;
+
+      if (checkWin(player)) {
+        statusText.textContent = `Player ${player} wins!`;
+        gameActive = false;
+        disableBoard();
+      } else if (gameState.every(cell => cell !== "")) {
+        statusText.textContent = "It's a draw!";
+        gameActive = false;
+      } else {
+        currentPlayer = player === "X" ? "O" : "X";
+        statusText.textContent = `Player ${currentPlayer}'s turn`;
+      }
+    }
+
+    function checkWin(player) {
+      return winConditions.some(condition =>
+        condition.every(index => gameState[index] === player)
+      );
+    }
+
+    function aiMove() {
+      const availableCells = gameState
+        .map((cell, index) => cell === "" ? index : null)
+        .filter(index => index !== null);
+
+      const randomIndex = availableCells[
+        Math.floor(Math.random() * availableCells.length)
+      ];
+
+      makeMove(randomIndex, "O");
+    }
+
+    function disableBoard() {
+      document.querySelectorAll(".cell").forEach(cell =>
+        cell.classList.add("disabled")
+      );
+    }
+
+    function resetGame() {
+      currentPlayer = "X";
+      gameActive = true;
+      gameState = Array(9).fill("");
+      statusText.textContent = "Player X's turn";
+      createBoard();
+    }
+
+    createBoard();
+  </script>
+
+</body>
+</html>
